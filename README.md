@@ -1,2 +1,544 @@
-# -
-テストのアンケート（Claudeで作成）
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Visitor Survey / 訪問者アンケート</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Noto+Sans+JP:wght@400;500;700&family=Noto+Sans+KR:wght@400;500;700&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Sans+TC:wght@400;500;700&family=Noto+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#182B49;
+    --ink-soft:#2B3F63;
+    --paper:#FBF7EF;
+    --paper-dim:#F1EBDD;
+    --stamp:#B23A2E;
+    --teal:#1F6F6B;
+    --line:#D9D2C0;
+    --text:#22252B;
+    --muted:#75706A;
+    --radius:2px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--ink);
+    background-image:
+      radial-gradient(circle at 15% 8%, rgba(255,255,255,0.045), transparent 40%),
+      radial-gradient(circle at 85% 92%, rgba(255,255,255,0.035), transparent 40%);
+    min-height:100vh;
+    font-family:'Noto Sans','Noto Sans JP','Noto Sans KR','Noto Sans SC','Noto Sans TC',sans-serif;
+    color:var(--text);
+    display:flex;
+    align-items:flex-start;
+    justify-content:center;
+    padding:28px 14px 60px;
+  }
+  .display{font-family:'Space Grotesk',sans-serif;}
+  #app{width:100%;max-width:460px;}
+
+  /* ---- header strip ---- */
+  .brandbar{
+    display:flex;align-items:center;justify-content:space-between;
+    color:var(--paper);
+    padding:2px 6px 18px;
+  }
+  .brandbar .mark{
+    font-family:'Space Grotesk',sans-serif;
+    font-weight:700;font-size:13px;letter-spacing:.18em;
+    text-transform:uppercase;opacity:.85;
+  }
+  .brandbar .flight{
+    font-family:'Space Grotesk',sans-serif;
+    font-size:11px;letter-spacing:.12em;opacity:.55;
+  }
+
+  /* ---- ticket card ---- */
+  .ticket{
+    background:var(--paper);
+    border-radius:var(--radius);
+    box-shadow:0 24px 60px rgba(0,0,0,0.35);
+    overflow:hidden;
+    position:relative;
+  }
+  .stub-top{
+    background:var(--ink);
+    color:var(--paper);
+    padding:20px 22px 16px;
+    position:relative;
+  }
+  .stub-top .eyebrow{
+    font-family:'Space Grotesk',sans-serif;
+    font-size:10.5px;letter-spacing:.2em;text-transform:uppercase;
+    color:#C9D4E8;margin-bottom:6px;
+  }
+  .stub-top h1{
+    margin:0;font-size:20px;line-height:1.4;font-weight:500;
+  }
+  .stub-top .meta{
+    display:flex;gap:16px;margin-top:14px;
+    font-family:'Space Grotesk',sans-serif;
+    font-size:11px;letter-spacing:.06em;color:#B9C4DC;
+  }
+  .stub-top .meta b{color:var(--paper);font-weight:600;}
+
+  .perforation{
+    position:relative;height:0;
+    border-top:2px dashed var(--line);
+    margin:0 0;
+  }
+  .perforation::before,.perforation::after{
+    content:"";position:absolute;top:-11px;width:22px;height:22px;
+    background:var(--ink);border-radius:50%;
+  }
+  .perforation::before{left:-11px;}
+  .perforation::after{right:-11px;}
+
+  /* ---- language row ---- */
+  .langrow{
+    display:flex;flex-wrap:wrap;gap:6px;
+    padding:16px 20px 4px;
+    background:var(--paper);
+  }
+  .langbtn{
+    font-family:'Noto Sans','Noto Sans JP','Noto Sans KR','Noto Sans SC','Noto Sans TC',sans-serif;
+    font-size:13.5px;padding:7px 12px;border-radius:20px;
+    border:1px solid var(--line);background:transparent;color:var(--text);
+    cursor:pointer;transition:all .15s ease;
+  }
+  .langbtn:hover{border-color:var(--teal);}
+  .langbtn.active{
+    background:var(--ink);border-color:var(--ink);color:var(--paper);
+  }
+
+  .body-pad{padding:14px 22px 24px;}
+
+  /* progress */
+  .progress-row{
+    display:flex;align-items:center;gap:8px;margin:6px 0 22px;
+    font-family:'Space Grotesk',sans-serif;font-size:11px;color:var(--muted);letter-spacing:.05em;
+  }
+  .progress-track{flex:1;height:3px;background:var(--paper-dim);border-radius:2px;overflow:hidden;}
+  .progress-fill{height:100%;background:var(--teal);transition:width .3s ease;}
+
+  .q{margin-bottom:26px;}
+  .q .qnum{
+    font-family:'Space Grotesk',sans-serif;font-size:11px;color:var(--stamp);
+    letter-spacing:.14em;font-weight:600;margin-bottom:6px;
+  }
+  .q .qtext{font-size:15.5px;line-height:1.55;font-weight:500;margin-bottom:12px;}
+
+  .scale-row{display:flex;gap:8px;justify-content:space-between;}
+  .scale-btn{
+    flex:1;aspect-ratio:1;border-radius:50%;border:1.5px solid var(--line);
+    background:transparent;font-family:'Space Grotesk',sans-serif;font-weight:600;
+    font-size:15px;cursor:pointer;color:var(--text);transition:all .15s ease;
+    display:flex;align-items:center;justify-content:center;
+  }
+  .scale-btn:hover{border-color:var(--teal);}
+  .scale-btn.sel{background:var(--stamp);border-color:var(--stamp);color:#fff;transform:scale(1.06);}
+  .scale-labels{display:flex;justify-content:space-between;margin-top:8px;font-size:11.5px;color:var(--muted);}
+
+  .opt-list{display:flex;flex-direction:column;gap:8px;}
+  .opt-btn{
+    text-align:left;padding:11px 14px;border-radius:var(--radius);
+    border:1.5px solid var(--line);background:transparent;cursor:pointer;
+    font-size:14.5px;color:var(--text);transition:all .15s ease;
+    font-family:inherit;
+  }
+  .opt-btn:hover{border-color:var(--teal);}
+  .opt-btn.sel{border-color:var(--stamp);background:rgba(178,58,46,0.06);font-weight:500;}
+
+  textarea, input[type=text]{
+    width:100%;border:1.5px solid var(--line);border-radius:var(--radius);
+    padding:11px 13px;font-size:14.5px;font-family:inherit;color:var(--text);
+    background:var(--paper);resize:vertical;min-height:74px;
+  }
+  input[type=text]{min-height:auto;}
+  textarea:focus,input:focus,.langbtn:focus,.opt-btn:focus,.scale-btn:focus{
+    outline:2px solid var(--teal);outline-offset:2px;
+  }
+
+  .submitbar{margin-top:8px;}
+  .submit-btn{
+    width:100%;padding:14px;border:none;border-radius:var(--radius);
+    background:var(--ink);color:var(--paper);font-size:15px;font-weight:600;
+    font-family:'Space Grotesk',sans-serif;letter-spacing:.05em;cursor:pointer;
+    text-transform:uppercase;transition:background .15s ease;
+  }
+  .submit-btn:hover{background:var(--ink-soft);}
+  .submit-btn:disabled{opacity:.5;cursor:not-allowed;}
+  .warn{color:var(--stamp);font-size:12.5px;margin-top:8px;text-align:center;}
+
+  /* thanks screen */
+  .thanks{padding:50px 26px 40px;text-align:center;}
+  .stamp-mark{
+    width:92px;height:92px;border:3px solid var(--stamp);border-radius:50%;
+    color:var(--stamp);display:flex;align-items:center;justify-content:center;
+    margin:0 auto 22px;transform:rotate(-11deg);
+    font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:11px;
+    letter-spacing:.08em;text-align:center;line-height:1.3;
+  }
+  .thanks h2{margin:0 0 8px;font-size:20px;}
+  .thanks p{color:var(--muted);font-size:14px;line-height:1.6;margin:0 0 26px;}
+  .again-btn{
+    background:transparent;border:1.5px solid var(--ink);color:var(--ink);
+    padding:11px 22px;border-radius:20px;font-size:13.5px;cursor:pointer;font-family:inherit;
+  }
+
+  .footerlink{
+    text-align:center;margin-top:16px;
+  }
+  .footerlink button{
+    background:none;border:none;color:#8b95b3;font-size:11.5px;cursor:pointer;
+    font-family:'Space Grotesk',sans-serif;letter-spacing:.08em;text-decoration:underline;
+    text-underline-offset:3px;
+  }
+
+  /* admin */
+  .admin-wrap{background:var(--paper);border-radius:var(--radius);padding:22px;box-shadow:0 24px 60px rgba(0,0,0,0.35);}
+  .admin-wrap h2{margin-top:0;font-family:'Space Grotesk',sans-serif;font-size:17px;}
+  .stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:16px 0 22px;}
+  .stat-box{border:1px solid var(--line);border-radius:var(--radius);padding:12px 14px;}
+  .stat-box .n{font-family:'Space Grotesk',sans-serif;font-size:24px;font-weight:700;color:var(--ink);}
+  .stat-box .l{font-size:11.5px;color:var(--muted);margin-top:2px;}
+  .bar-row{display:flex;align-items:center;gap:8px;font-size:12.5px;margin-bottom:6px;}
+  .bar-track{flex:1;height:8px;background:var(--paper-dim);border-radius:4px;overflow:hidden;}
+  .bar-fill{height:100%;background:var(--teal);}
+  .section-title{font-family:'Space Grotesk',sans-serif;font-size:11px;letter-spacing:.12em;
+    text-transform:uppercase;color:var(--muted);margin:20px 0 10px;}
+  .comment{border-bottom:1px solid var(--line);padding:10px 0;font-size:13.5px;}
+  .comment .tag{font-family:'Space Grotesk',sans-serif;font-size:10px;color:var(--teal);
+    letter-spacing:.08em;text-transform:uppercase;margin-bottom:3px;}
+  .loading{color:var(--muted);font-size:13px;padding:20px 0;text-align:center;}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+const LANGS = ["ja","ko","zh-Hans","zh-Hant","en"];
+
+const STRINGS = {
+  ja: { flightno:"AI-0715", title:"ご意見をお聞かせください", subtitle:"所要時間 約1分",
+    langName:"日本語",
+    q1:"今回のご滞在にどのくらい満足しましたか？", q1_low:"不満", q1_high:"とても満足",
+    q2:"また訪れたいと思いますか？",
+    q2_opts:["ぜひまた訪れたい","機会があれば","わからない","訪れないと思う"],
+    q3:"良かった点を教えてください（任意）", q3_ph:"例：スタッフの対応、雰囲気など",
+    q4:"改善してほしい点はありますか？（任意）", q4_ph:"例：案内表示、待ち時間など",
+    q5:"どちらの国・地域からお越しですか？（任意）", q5_ph:"例：大阪、ソウル、台北など",
+    submit:"送信する", required:"必須の質問に回答してください",
+    thanksTitle:"ありがとうございました", thanksBody:"ご回答を受け付けました。良い旅を！",
+    back:"もう一度回答する", admin:"管理者" },
+  ko: { flightno:"AI-0715", title:"소중한 의견을 들려주세요", subtitle:"소요 시간 약 1분",
+    langName:"한국어",
+    q1:"이번 방문에 얼마나 만족하셨나요?", q1_low:"불만족", q1_high:"매우 만족",
+    q2:"다시 방문하고 싶으신가요?",
+    q2_opts:["꼭 다시 방문하고 싶어요","기회가 되면","잘 모르겠어요","다시 방문하지 않을 것 같아요"],
+    q3:"좋았던 점을 알려주세요 (선택)", q3_ph:"예: 직원 응대, 분위기 등",
+    q4:"개선이 필요한 점이 있나요? (선택)", q4_ph:"예: 안내 표지, 대기 시간 등",
+    q5:"어느 국가/지역에서 오셨나요? (선택)", q5_ph:"예: 서울, 오사카, 타이베이 등",
+    submit:"제출하기", required:"필수 질문에 답해주세요",
+    thanksTitle:"감사합니다", thanksBody:"답변이 접수되었습니다. 좋은 여행 되세요!",
+    back:"다시 답변하기", admin:"관리자" },
+  "zh-Hans": { flightno:"AI-0715", title:"请分享您的意见", subtitle:"大约需要1分钟",
+    langName:"简体中文",
+    q1:"您对本次旅行的满意度如何？", q1_low:"不满意", q1_high:"非常满意",
+    q2:"您是否愿意再次到访？",
+    q2_opts:["一定会再来","有机会的话会来","还不确定","应该不会再来"],
+    q3:"有哪些让您满意的地方？（选填）", q3_ph:"例如：工作人员的服务、氛围等",
+    q4:"有哪些需要改进的地方？（选填）", q4_ph:"例如：指示牌、等待时间等",
+    q5:"您来自哪个国家/地区？（选填）", q5_ph:"例如：上海、首尔、大阪等",
+    submit:"提交", required:"请回答必填问题",
+    thanksTitle:"非常感谢", thanksBody:"您的回答已收到。祝您旅途愉快！",
+    back:"再次填写", admin:"管理" },
+  "zh-Hant": { flightno:"AI-0715", title:"請分享您的意見", subtitle:"大約需要1分鐘",
+    langName:"繁體中文",
+    q1:"您對本次旅行的滿意度如何？", q1_low:"不滿意", q1_high:"非常滿意",
+    q2:"您是否願意再次到訪？",
+    q2_opts:["一定會再來","有機會的話會來","還不確定","應該不會再來"],
+    q3:"有哪些讓您滿意的地方？（選填）", q3_ph:"例如：工作人員的服務、氛圍等",
+    q4:"有哪些需要改進的地方？（選填）", q4_ph:"例如：指示牌、等待時間等",
+    q5:"您來自哪個國家/地區？（選填）", q5_ph:"例如：台北、大阪、首爾等",
+    submit:"提交", required:"請回答必填問題",
+    thanksTitle:"非常感謝", thanksBody:"您的回答已收到。祝您旅途愉快！",
+    back:"再次填寫", admin:"管理" },
+  en: { flightno:"AI-0715", title:"Tell us about your visit", subtitle:"About 1 minute",
+    langName:"English",
+    q1:"How satisfied were you with your visit?", q1_low:"Not satisfied", q1_high:"Very satisfied",
+    q2:"Would you visit again?",
+    q2_opts:["Definitely","If I get the chance","Not sure","Probably not"],
+    q3:"What did you enjoy? (optional)", q3_ph:"e.g. staff, atmosphere, food",
+    q4:"What could we improve? (optional)", q4_ph:"e.g. signage, wait times",
+    q5:"Where are you visiting from? (optional)", q5_ph:"e.g. Seoul, Taipei, New York",
+    submit:"Submit", required:"Please answer the required questions",
+    thanksTitle:"Thank you", thanksBody:"Your response has been recorded. Safe travels!",
+    back:"Submit another response", admin:"Admin" },
+};
+
+let state = {
+  screen:"language",   // language | survey | thanks | admin | adminGate
+  lang:"ja",
+  answers:{ rating:null, again:null, good:"", improve:"", origin:"" },
+  submitting:false,
+  error:null,
+};
+
+const app = document.getElementById("app");
+
+function t(key){ return STRINGS[state.lang][key]; }
+
+function setState(patch){ state = {...state, ...patch}; render(); }
+
+function progressCount(){
+  let n = 0;
+  if(state.answers.rating) n++;
+  if(state.answers.again) n++;
+  return n;
+}
+
+function render(){
+  app.innerHTML = "";
+  const bar = document.createElement("div");
+  bar.className = "brandbar";
+  bar.innerHTML = `<span class="mark">Visitor Feedback</span><span class="flight">${STRINGS[state.lang].flightno}</span>`;
+  app.appendChild(bar);
+
+  const ticket = document.createElement("div");
+  ticket.className = "ticket";
+
+  if(state.screen === "thanks"){
+    ticket.appendChild(renderThanks());
+  } else if(state.screen === "adminGate"){
+    ticket.appendChild(renderAdminGate());
+  } else if(state.screen === "admin"){
+    const wrap = document.createElement("div");
+    wrap.className = "admin-wrap";
+    wrap.appendChild(renderAdminLoading());
+    app.appendChild(wrap);
+    loadAdminData(wrap);
+    appendFooter();
+    return;
+  } else {
+    ticket.appendChild(renderStub());
+    ticket.appendChild(renderPerforation());
+    ticket.appendChild(renderLangRow());
+    ticket.appendChild(renderSurveyBody());
+  }
+  app.appendChild(ticket);
+  appendFooter();
+}
+
+function renderStub(){
+  const el = document.createElement("div");
+  el.className = "stub-top";
+  el.innerHTML = `
+    <div class="eyebrow">Boarding · Feedback</div>
+    <h1>${t("title")}</h1>
+    <div class="meta"><span><b>${t("langName")}</b></span><span>${t("subtitle")}</span></div>
+  `;
+  return el;
+}
+
+function renderPerforation(){
+  const el = document.createElement("div");
+  el.className = "perforation";
+  return el;
+}
+
+function renderLangRow(){
+  const el = document.createElement("div");
+  el.className = "langrow";
+  LANGS.forEach(l=>{
+    const b = document.createElement("button");
+    b.className = "langbtn" + (state.lang===l ? " active":"");
+    b.textContent = STRINGS[l].langName;
+    b.onclick = ()=> setState({lang:l});
+    el.appendChild(b);
+  });
+  return el;
+}
+
+function renderSurveyBody(){
+  const el = document.createElement("div");
+  el.className = "body-pad";
+
+  const prog = document.createElement("div");
+  prog.className = "progress-row";
+  const pct = Math.round((progressCount()/2)*100);
+  prog.innerHTML = `<span>${progressCount()}/2</span><div class="progress-track"><div class="progress-fill" style="width:${pct}%"></div></div>`;
+  el.appendChild(prog);
+
+  // Q1 rating
+  const q1 = document.createElement("div");
+  q1.className = "q";
+  q1.innerHTML = `<div class="qnum">Q1</div><div class="qtext">${t("q1")}</div>`;
+  const scaleRow = document.createElement("div");
+  scaleRow.className = "scale-row";
+  for(let i=1;i<=5;i++){
+    const b = document.createElement("button");
+    b.className = "scale-btn" + (state.answers.rating===i ? " sel":"");
+    b.textContent = i;
+    b.onclick = ()=>{ state.answers.rating=i; render(); };
+    scaleRow.appendChild(b);
+  }
+  q1.appendChild(scaleRow);
+  const labels = document.createElement("div");
+  labels.className = "scale-labels";
+  labels.innerHTML = `<span>${t("q1_low")}</span><span>${t("q1_high")}</span>`;
+  q1.appendChild(labels);
+  el.appendChild(q1);
+
+  // Q2 options
+  const q2 = document.createElement("div");
+  q2.className = "q";
+  q2.innerHTML = `<div class="qnum">Q2</div><div class="qtext">${t("q2")}</div>`;
+  const optList = document.createElement("div");
+  optList.className = "opt-list";
+  t("q2_opts").forEach(opt=>{
+    const b = document.createElement("button");
+    b.className = "opt-btn" + (state.answers.again===opt ? " sel":"");
+    b.textContent = opt;
+    b.onclick = ()=>{ state.answers.again=opt; render(); };
+    optList.appendChild(b);
+  });
+  q2.appendChild(optList);
+  el.appendChild(q2);
+
+  // Q3 free text
+  el.appendChild(makeTextQ("Q3","q3","q3_ph","good"));
+  // Q4 free text
+  el.appendChild(makeTextQ("Q4","q4","q4_ph","improve"));
+  // Q5 origin
+  const q5 = document.createElement("div");
+  q5.className = "q";
+  q5.innerHTML = `<div class="qnum">Q5</div><div class="qtext">${t("q5")}</div>`;
+  const inp = document.createElement("input");
+  inp.type = "text";
+  inp.placeholder = t("q5_ph");
+  inp.value = state.answers.origin;
+  inp.oninput = (e)=>{ state.answers.origin = e.target.value; };
+  q5.appendChild(inp);
+  el.appendChild(q5);
+
+  const submitbar = document.createElement("div");
+  submitbar.className = "submitbar";
+  const btn = document.createElement("button");
+  btn.className = "submit-btn";
+  btn.textContent = state.submitting ? "..." : t("submit");
+  btn.disabled = state.submitting;
+  btn.onclick = handleSubmit;
+  submitbar.appendChild(btn);
+  if(state.error){
+    const warn = document.createElement("div");
+    warn.className = "warn";
+    warn.textContent = state.error;
+    submitbar.appendChild(warn);
+  }
+  el.appendChild(submitbar);
+
+  return el;
+}
+
+function makeTextQ(num, qKey, phKey, field){
+  const q = document.createElement("div");
+  q.className = "q";
+  q.innerHTML = `<div class="qnum">${num}</div><div class="qtext">${t(qKey)}</div>`;
+  const ta = document.createElement("textarea");
+  ta.placeholder = t(phKey);
+  ta.value = state.answers[field];
+  ta.oninput = (e)=>{ state.answers[field] = e.target.value; };
+  q.appendChild(ta);
+  return q;
+}
+
+async function handleSubmit(){
+  if(!state.answers.rating || !state.answers.again){
+    setState({error: t("required")});
+    return;
+  }
+  state.submitting = true; state.error = null; render();
+  const payload = {
+    lang: state.lang,
+    rating: state.answers.rating,
+    again: state.answers.again,
+    good: state.answers.good,
+    improve: state.answers.improve,
+    origin: state.answers.origin,
+    ts: new Date().toISOString(),
+  };
+  const key = `responses:${Date.now()}-${Math.random().toString(36).slice(2,8)}`;
+  try{
+    // window.storageの代わりにローカルストレージを使用
+    localStorage.setItem(key, JSON.stringify(payload));
+    // 擬似的なネットワーク遅延を挟んでリアルな挙動に
+    await new Promise(resolve => setTimeout(resolve, 600));
+    setState({screen:"thanks", submitting:false});
+  }catch(err){
+    setState({submitting:false, error:"送信に失敗しました。もう一度お試しください。"});
+  }
+}
+
+function renderThanks(){
+  const el = document.createElement("div");
+  el.className = "thanks";
+  el.innerHTML = `
+    <div class="stamp-mark">COMPLETED<br>${new Date().toLocaleDateString()}</div>
+    <h2>${t("thanksTitle")}</h2>
+    <p>${t("thanksBody")}</p>
+  `;
+  const btn = document.createElement("button");
+  btn.className = "again-btn";
+  btn.textContent = t("back");
+  btn.onclick = ()=>{
+    state.answers = { rating:null, again:null, good:"", improve:"", origin:"" };
+    setState({screen:"survey"});
+  };
+  el.appendChild(btn);
+  return el;
+}
+
+function appendFooter(){
+  const f = document.createElement("div");
+  f.className = "footerlink";
+  const b = document.createElement("button");
+  b.textContent = (state.screen==="admin" || state.screen==="adminGate") ? "← Close" : "Admin";
+  b.onclick = ()=>{
+    if(state.screen==="admin" || state.screen==="adminGate"){ setState({screen:"survey"}); }
+    else{ setState({screen:"adminGate"}); }
+  };
+  f.appendChild(b);
+  app.appendChild(f);
+}
+
+function renderAdminGate(){
+  const el = document.createElement("div");
+  el.className = "thanks";
+  el.innerHTML = `<h2 style="margin-bottom:14px;">Admin Access</h2>`;
+  const inp = document.createElement("input");
+  inp.type = "password";
+  inp.placeholder = "Passcode";
+  inp.style.marginBottom = "14px";
+  el.appendChild(inp);
+  const btn = document.createElement("button");
+  btn.className = "again-btn";
+  btn.textContent = "Enter";
+  btn.onclick = ()=>{
+    if(inp.value === "0715"){ setState({screen:"admin"}); }
+    else{ inp.style.borderColor = "var(--stamp)"; }
+  };
+  el.appendChild(document.createElement("br"));
+  el.appendChild(btn);
+  const note = document.createElement("p");
+  note.style.marginTop = "16px";
+  note.style.fontSize = "11.5px";
+  note.textContent = "Simple passcode gate — not secure encryption.";
+  el.appendChild(note);
+  return el;
+}
+
+function renderAdminLoading(){
+  const el = document.createElement("div");
+  el.className = "loading";
+  el.textContent = "Loading responses..."
